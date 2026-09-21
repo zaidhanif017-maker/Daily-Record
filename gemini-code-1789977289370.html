@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jadual Recovery Zaid</title>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --text: #000000;
+            --border: #000000;
+            --light-gray: #F0F0F0;
+            --dark-gray: #333333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        h1 { text-align: center; color: var(--text); margin-bottom: 5px; border-bottom: 3px solid var(--text); padding-bottom: 10px; text-transform: uppercase;}
+        
+        .date-display {
+            font-size: 1.1rem; font-weight: bold; margin-top: 15px; margin-bottom: 15px;
+            padding: 10px; background: var(--light-gray); border: 2px solid var(--border);
+            text-align: center; text-transform: uppercase;
+        }
+
+        /* Mode Selector */
+        .mode-selector {
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+        }
+        .mode-btn {
+            background: var(--bg); color: var(--text); border: 2px solid var(--border);
+            padding: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
+        .mode-btn.active { background: var(--text); color: var(--bg); }
+
+        /* Task List */
+        .task-card {
+            background: var(--bg); border: 2px solid var(--border);
+            margin-bottom: 10px; padding: 15px;
+            display: flex; align-items: flex-start;
+        }
+        .task-time {
+            font-weight: bold; min-width: 85px; margin-right: 15px; font-size: 0.95rem;
+            border-right: 2px solid var(--border); padding-right: 10px;
+        }
+        .task-label {
+            display: flex; align-items: flex-start; flex-grow: 1;
+            font-size: 1.05rem; cursor: pointer; transition: 0.3s; line-height: 1.4;
+        }
+        .task-label input { 
+            width: 22px; height: 22px; margin-right: 12px; margin-top: 2px;
+            accent-color: var(--text); flex-shrink: 0;
+        }
+
+        /* Daily Protocol Form (Data Harian) */
+        .protocol-box {
+            background: var(--light-gray); border: 3px solid var(--border);
+            padding: 20px; margin-top: 30px;
+        }
+        .protocol-box h2 { margin-top: 0; text-transform: uppercase; font-size: 1.3rem; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group select, .form-group input {
+            width: 100%; padding: 10px; border: 2px solid var(--border); background: var(--bg);
+            font-size: 1rem; font-family: inherit; box-sizing: border-box;
+        }
+        .save-btn {
+            width: 100%; background: var(--text); color: var(--bg); border: none;
+            padding: 15px; font-size: 1.1rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; margin-top: 10px;
+        }
+
+        /* Rules Box */
+        .rules-box {
+            border: 2px dashed var(--border); padding: 15px; margin-top: 20px; font-size: 0.95rem;
+        }
+        .rules-box h3 { margin-top: 0; text-transform: uppercase; }
+
+        /* Green Spark Animation */
+        @keyframes greenSpark {
+            0% { color: #000000; text-shadow: none; }
+            50% { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; }
+            100% { color: #000000; text-shadow: none; }
+        }
+        .sparking { animation: greenSpark 0.7s ease-out; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Jadual Zaid</h1>
+    <div id="current-date-display" class="date-display"></div>
+
+    <div class="rules-box">
+        <h3>🔥 3 Rule Wajib & Protokol</h3>
+        <p>1. <b>Jangan Mengamuk:</b> Kalau terlanggar jadual (bangun lambat), jangan give up. Terus mula dari waktu semasa.</p>
+        <p>2. <b>STOP → MOVE → DELAY → REDIRECT:</b> Kalau rasa sangap/trigger, TERUS BANGUN pergi minum air atau basuh muka.</p>
+        <p>3. <b>Keep it Simple:</b> Jangan beratkan jadual. Target kecil: Bangun Subuh & jalan kat luar.</p>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn" id="btn-isnin" onclick="setMode('isnin')">Isnin - Jumaat (Bebas & Belajar)</button>
+        <button class="mode-btn" id="btn-sabtuA" onclick="setMode('sabtuA')">Sabtu & Ahad (Kerja - Pagi)</button>
+        <button class="mode-btn" id="btn-sabtuB" onclick="setMode('sabtuB')">Sabtu & Ahad (Kerja - Petang)</button>
+    </div>
+
+    <div id="task-container"></div>
+
+    <!-- Protokol Tidur (Data Harian) -->
+    <div class="protocol-box">
+        <h2>🌙 Protokol Tidur (Data Harian)</h2>
+        <div class="form-group">
+            <label>Solat Berapa Waktu Hari Ini? (0-5)</label>
+            <select id="log-solat">
+                <option value="5">5 Waktu Penuh</option>
+                <option value="4">4 Waktu</option>
+                <option value="3">3 Waktu</option>
+                <option value="2">2 Waktu</option>
+                <option value="1">1 Waktu</option>
+                <option value="0">0 Waktu (Kena Usaha Lagi Esok!)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tengok Porn / Relapse Hari Ini?</label>
+            <select id="log-relapse">
+                <option value="Tidak">TIDAK (Alhamdulillah, Kekalkan!)</option>
+                <option value="Ya">YA (Istighfar, Jangan Give Up)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Apa Trigger Hari Ini? (Tulis supaya aware)</label>
+            <input type="text" id="log-trigger" placeholder="Cth: Penat sangat balik kerja, stress assignment...">
+        </div>
+        <button class="save-btn" onclick="saveDailyLog()">Simpan Data Hari Ini</button>
+    </div>
+
+    <script>
+        const schedules = {
+            "isnin": [
+                { time: "06:00 AM", task: "Subuh & Bangun. (Terlepas? Bangun je terus buat)" },
+                { time: "06:30 AM", task: "Gerakkan Badan (20-30 min). Syarat: Tanpa Telefon!" },
+                { time: "07:00 AM", task: "Mandi awal bagi segar, Sarapan. Jangan pakai baju tidur." },
+                { time: "09:00 AM", task: "Sesi Belajar 1 (Deep Work). Fon mod DND." },
+                { time: "11:30 AM", task: "Rehat / Masa Bebas (Game/YouTube/Nap 20 min)." },
+                { time: "01:15 PM", task: "Solat Zohor + Istighfar minta ampun." },
+                { time: "02:00 PM", task: "Sesi Belajar 2 / Ulangkaji / Assignment." },
+                { time: "04:30 PM", task: "Solat Asar & Keluar Bilik. Tolong family/sapu sampah." },
+                { time: "07:15 PM", task: "Kritikal: Solat Maghrib -> Baca Al-Quran 1-2 Muka -> Lepak dengan family." },
+                { time: "08:30 PM", task: "Solat Isyak." },
+                { time: "09:00 PM", task: "Chill (Movie/Hobi). Syarat: Di ruang tamu, BUKAN atas katil." },
+                { time: "10:30 PM", task: "Protokol Tidur: Cas fon luar bilik. Baca buku fizikal." }
+            ],
+            "sabtuA": [
+                { time: "06:00 AM", task: "Subuh." },
+                { time: "08:00 AM", task: "Bersiap & Sarapan." },
+                { time: "10:00 AM", task: "Kerja (10am-10pm). Misi: Curi masa Solat Zohor, Asar, Maghrib, Isyak." },
+                { time: "10:30 PM", task: "Balik Kerja: Mandi Wajib. JANGAN buka fon, willpower tengah lemah. Terus tidur." }
+            ],
+            "sabtuB": [
+                { time: "06:00 AM", task: "Subuh." },
+                { time: "07:30 AM", task: "Senaman / Jalan kaki (20 minit)." },
+                { time: "09:00 AM", task: "Belajar sekejap / Kemas bilik." },
+                { time: "01:15 PM", task: "Solat Zohor & Mula bersiap nak pergi kerja." },
+                { time: "03:00 PM", task: "Kerja (Settlekan Asar, Maghrib, Isyak kat tempat kerja)." },
+                { time: "Malam", task: "Balik Kerja: Mandi, Cas fon jauh-jauh, isi rekod, terus lelap." }
+            ]
+        };
+
+        let currentMode = "isnin";
+        let appData = {
+            lastDate: "",
+            tasksCompleted: {},
+            dailyLogs: {}
+        };
+
+        function getTodayString() { return new Date().toISOString().split('T')[0]; }
+        
+        function getFormattedDateAndDay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date().toLocaleDateString('ms-MY', options);
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem("ZaidRecoveryData");
+            if (saved) appData = JSON.parse(saved);
+            
+            const today = getTodayString();
+            if (appData.lastDate !== today) {
+                appData.lastDate = today;
+                appData.tasksCompleted = {}; 
+                saveData();
+            }
+
+            // Auto-select mode based on day
+            const dayOfWeek = new Date().getDay(); // 0 is Sunday, 6 is Saturday
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                setMode("sabtuA"); // Default to weekend shift pagi
+            } else {
+                setMode("isnin");
+            }
+        }
+
+        function saveData() { localStorage.setItem("ZaidRecoveryData", JSON.stringify(appData)); }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + mode).classList.add('active');
+            renderTasks();
+            
+            // Load today's log if it exists
+            const today = getTodayString();
+            if(appData.dailyLogs[today]) {
+                document.getElementById('log-solat').value = appData.dailyLogs[today].solat;
+                document.getElementById('log-relapse').value = appData.dailyLogs[today].relapse;
+                document.getElementById('log-trigger').value = appData.dailyLogs[today].trigger;
+            } else {
+                document.getElementById('log-trigger').value = ""; // Reset
+            }
+        }
+
+        function toggleTask(taskId, isChecked, labelId) {
+            appData.tasksCompleted[taskId] = isChecked;
+            saveData();
+
+            if (isChecked) {
+                const labelElement = document.getElementById(labelId);
+                labelElement.classList.add("sparking");
+                setTimeout(() => labelElement.classList.remove("sparking"), 700);
+            }
+        }
+
+        function saveDailyLog() {
+            const today = getTodayString();
+            appData.dailyLogs[today] = {
+                solat: document.getElementById('log-solat').value,
+                relapse: document.getElementById('log-relapse').value,
+                trigger: document.getElementById('log-trigger').value
+            };
+            saveData();
+            alert("Data hari ini berjaya disimpan, Zaid! Teruskan usaha esok.");
+        }
+
+        function renderTasks() {
+            const container = document.getElementById("task-container");
+            container.innerHTML = "";
+            const today = getTodayString();
+
+            schedules[currentMode].forEach((item, index) => {
+                const taskId = `${today}-${currentMode}-${index}`;
+                const labelId = `label-${index}`;
+                
+                const card = document.createElement("div");
+                card.className = "task-card";
+
+                const timeDiv = document.createElement("div");
+                timeDiv.className = "task-time";
+                timeDiv.innerText = item.time;
+
+                const label = document.createElement("label");
+                label.className = "task-label";
+                label.id = labelId;
+                
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = !!appData.tasksCompleted[taskId];
+                checkbox.addEventListener("change", (e) => toggleTask(taskId, e.target.checked, labelId));
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(item.task));
+
+                card.appendChild(timeDiv);
+                card.appendChild(label);
+                container.appendChild(card);
+            });
+        }
+
+        // Initialize
+        document.getElementById("current-date-display").innerText = getFormattedDateAndDay();
+        loadData();
+    </script>
+</body>
+</html>
